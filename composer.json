@@ -1,0 +1,25 @@
+{
+  "name": "calcinai/incephption",
+  "type": "library",
+  "description": "PHP code generator with a hyper-fluent interface",
+  "homepage": "https://github.com/calcinai/incephption",
+  "license": "MIT",
+
+  "require": {
+    "php": ">=5.5.0"
+  },
+
+  "require-dev": {
+    "phpunit/phpunit": "~4.7"
+  },
+
+  "repositories": [
+  ],
+
+  "autoload": {
+    "psr-4": {
+      "Calcinai\\Incephption\\": "src/Incephption/"
+    }
+  }
+
+}
