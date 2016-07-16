@@ -1,16 +1,16 @@
-# php-codegen
+# incephption
 PHP code generator with a fluent interface
 
 ## Installation
 soon
 
 ## Usage
-You can use the basic OO implemention or the super-fluent interface (shown below)
+You can use the basic OO implemention or the super-fluent interface (shown below).  The idea is for the template to read as much like PHP as possible, while still being valid php.
 
 ```php
 $template = (new Fluent())
 
-->doc('This file is part of php-codegen package.')
+->doc('This file is part of incephption package.')
 ->doc('Check x for copyright info.')
 
 /**
@@ -64,7 +64,7 @@ Will Result in the code:
 ```php
 <?php
 /**
- * This file is part of php-codegen package.
+ * This file is part of incephption package.
  * Check x for copyright info.
  */
 
@@ -122,3 +122,4 @@ abstract class Test extends Base {
 }
 ```
 
+More to come!
