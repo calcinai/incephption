@@ -8,7 +8,7 @@ soon
 You can use the basic OO implemention or the super-fluent interface (shown below).  The idea is for the template to read as much like PHP as possible, while still being valid php.
 
 ```php
-$template = (new Fluent())
+$template = (new Builder())
 
 ->doc('This file is part of incephption package.')
 ->doc('Check x for copyright info.')
@@ -120,6 +120,29 @@ abstract class Test extends Base {
     }
 
 }
+```
+
+
+You can obviously stop the chain at any time to insert application logic, and the builder will retain the current context:
+
+```php
+$builder = (new Builder())
+
+->doc('This file is part of incephption package.')
+->doc('Check x for copyright info.');
+
+
+//Do some conditional logic
+if($use_namespace){
+    $builder->namespace('Calcinai\\Test');
+}
+
+//then continue
+$builder
+
+->abstract->class('Test')->extends('Base')
+
+...
 ```
 
 More to come!

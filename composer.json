@@ -18,7 +18,7 @@
 
   "autoload": {
     "psr-4": {
-      "Calcinai\\Incephption\\": "src/Incephption/"
+      "Calcinai\\Incephption\\": "src/"
     }
   }
 
