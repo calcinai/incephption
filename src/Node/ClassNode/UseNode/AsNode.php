@@ -7,17 +7,18 @@
 namespace Calcinai\Incephption\Node\ClassNode\UseNode;
 
 use Calcinai\Incephption\Node\AbstractNode;
+use Calcinai\Incephption\Node\Traits\VisibilityTrait;
 
 class AsNode extends AbstractNode {
 
-    private $visibility;
+    use VisibilityTrait;
+
     private $as;
 
-    public function setVisibility($visibility) {
-        $this->visibility = $visibility;
-    }
 
     public function setAs($name) {
         $this->as = $name;
+
+        return $this;
     }
 }

@@ -7,12 +7,12 @@
 
 namespace Calcinai\Incephption\Node\Traits;
 
-trait VisibilityTrait {
+trait FinalTrait {
 
-    private $visibility;
+    private $is_final = false;
 
-    public function setVisibility($visibility){
-        $this->visibility = $visibility;
+    public function setIsFinal($is_final) {
+        $this->is_final = $is_final;
 
         return $this;
     }

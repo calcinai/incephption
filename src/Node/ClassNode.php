@@ -6,7 +6,13 @@
 
 namespace Calcinai\Incephption\Node;
 
+use Calcinai\Incephption\Node\ClassNode\ConstNode;
+use Calcinai\Incephption\Node\ClassNode\MethodNode;
+use Calcinai\Incephption\Node\ClassNode\PropertyNode;
 use Calcinai\Incephption\Node\ClassNode\UseNode;
+use Calcinai\Incephption\Node\Traits\AbstractTrait;
+use Calcinai\Incephption\Node\Traits\DocTrait;
+use Calcinai\Incephption\Node\Traits\VisibilityTrait;
 
 /**
  * Unfortunately can't just call this 'Class'
@@ -16,9 +22,17 @@ use Calcinai\Incephption\Node\ClassNode\UseNode;
  */
 class ClassNode extends AbstractNode {
 
+    use AbstractTrait;
+    use VisibilityTrait;
+    use DocTrait;
+
     private $extends;
 
     private $uses = [];
+    private $consts = [];
+    private $properties = [];
+    private $methods = [];
+
 
     public function setExtends($class_name) {
         $this->extends = $class_name;
@@ -26,5 +40,17 @@ class ClassNode extends AbstractNode {
 
     public function addUse(UseNode $use) {
         $this->uses[] = $use;
+    }
+
+    public function addConst(ConstNode $const) {
+        $this->consts[] = $const;
+    }
+
+    public function addProperty(PropertyNode $property) {
+        $this->properties[] = $property;
+    }
+
+    public function addMethod(MethodNode $method) {
+        $this->methods[] = $method;
     }
 }

@@ -5,6 +5,7 @@
  */
 
 namespace Calcinai\Incephption\Node;
+use Calcinai\Incephption\Node\Traits\DocTrait;
 
 /**
  * There's no collision with reserved names but named for consistency.
@@ -14,8 +15,11 @@ namespace Calcinai\Incephption\Node;
  */
 class FileNode extends AbstractNode {
 
+    use DocTrait;
+
     private $classes = [];
     private $uses = [];
+    private $namespace;
 
     /**
      * @param ClassNode $class
@@ -28,6 +32,10 @@ class FileNode extends AbstractNode {
 
     public function addUse($use) {
         $this->uses[] = $use;
+    }
+
+    public function setNamespace($namespace) {
+        $this->namespace = $namespace;
     }
 
 

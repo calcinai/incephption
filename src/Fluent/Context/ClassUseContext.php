@@ -41,7 +41,9 @@ class ClassUseContext extends AbstractContext{
      */
     public function handleUse($name){
         if(false === strpos($name, '::')){
-            return $this->getParentContext()->use($name);
+            /** @var ClassContext $parent_context */
+            $parent_context = $this->getParentContext();
+            $parent_context->handleUse($name);
         }
 
         $this->pending_override = $name;
@@ -50,8 +52,8 @@ class ClassUseContext extends AbstractContext{
     }
 
     public function handleAs($name){
-        $override = new UseNode\AsNode($this->pending_override);
-        $override->setAs($name);
+        $override = UseNode\AsNode::create($this->pending_override)
+            ->setAs($name);
 
         $this->use->addOverride($override);
 
@@ -59,29 +61,21 @@ class ClassUseContext extends AbstractContext{
     }
 
     public function handlePrivate($name = null){
-        $override = new UseNode\AsNode($this->pending_override);
-        $override->setVisibility(AbstractNode::VISIBILITY_PRIVATE);
-        $override->setAs($name);
-
-        $this->use->addOverride($override);
-
-        return $this;
+        return $this->handleVar($name, AbstractNode::VISIBILITY_PRIVATE);
     }
 
     public function handleProtected($name = null){
-        $override = new UseNode\AsNode($this->pending_override);
-        $override->setVisibility(AbstractNode::VISIBILITY_PROTECTED);
-        $override->setAs($name);
-
-        $this->use->addOverride($override);
-
-        return $this;
+        return $this->handleVar($name, AbstractNode::VISIBILITY_PROTECTED);
     }
 
     public function handlePublic($name = null){
-        $override = new UseNode\AsNode($this->pending_override);
-        $override->setVisibility(AbstractNode::VISIBILITY_PUBLIC);
-        $override->setAs($name);
+        return $this->handleVar($name, AbstractNode::VISIBILITY_PUBLIC);
+    }
+
+    public function handleVar($name = null, $visibility = null){
+        $override = UseNode\AsNode::create($this->pending_override)
+            ->setVisibility($visibility)
+            ->setAs($name);
 
         $this->use->addOverride($override);
 

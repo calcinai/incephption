@@ -7,12 +7,12 @@
 
 namespace Calcinai\Incephption\Node\Traits;
 
-trait VisibilityTrait {
+trait StaticTrait {
 
-    private $visibility;
+    private $is_static = false;
 
-    public function setVisibility($visibility){
-        $this->visibility = $visibility;
+    public function setIsStatic($is_static) {
+        $this->is_static = $is_static;
 
         return $this;
     }

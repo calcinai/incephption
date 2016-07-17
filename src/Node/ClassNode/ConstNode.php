@@ -4,22 +4,26 @@
  * @author     Michael Calcinai <michael@calcin.ai>
  */
 
-namespace Calcinai\Incephption\Node\FileNode;
+namespace Calcinai\Incephption\Node\ClassNode;
 
 use Calcinai\Incephption\Node\AbstractNode;
 use Calcinai\Incephption\Node\Traits\DocTrait;
 
+
 /**
- * Class UseNode
+ * Class ConstNode
  * @package Calcinai\Incephption\Component
  */
-class UseNode extends AbstractNode {
+class ConstNode extends AbstractNode {
 
     use DocTrait;
 
-    private $as;
+    private $value;
 
-    public function setAs($alias) {
-        $this->as = $alias;
+    public function setValue($value){
+        $this->value = $value;
+
+        return $this;
     }
+
 }

@@ -9,12 +9,15 @@ namespace Calcinai\Incephption\Node\ClassNode;
 use Calcinai\Incephption\Node\AbstractNode;
 use Calcinai\Incephption\Node\ClassNode\UseNode\InsteadOfNode;
 use Calcinai\Incephption\Node\ClassNode\UseNode\AsNode;
+use Calcinai\Incephption\Node\Traits\DocTrait;
 
 /**
  * Class UseNode
  * @package Calcinai\Incephption\Component
  */
 class UseNode extends AbstractNode {
+
+    use DocTrait;
 
     private $insteadofs = [];
     private $overrides = [];

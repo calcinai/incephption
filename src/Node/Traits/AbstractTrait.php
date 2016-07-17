@@ -7,12 +7,12 @@
 
 namespace Calcinai\Incephption\Node\Traits;
 
-trait VisibilityTrait {
+trait AbstractTrait {
 
-    private $visibility;
+    private $is_abstract = false;
 
-    public function setVisibility($visibility){
-        $this->visibility = $visibility;
+    public function setIsAbstract($is_abstract) {
+        $this->is_abstract = $is_abstract;
 
         return $this;
     }
