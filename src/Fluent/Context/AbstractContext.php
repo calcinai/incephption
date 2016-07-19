@@ -7,22 +7,22 @@
 namespace Calcinai\Incephption\Fluent\Context;
 
 use Calcinai\Incephption\Exception\InvalidQualifierException;
-use Calcinai\Incephption\Node\AbstractNode;
-use Calcinai\Incephption\Node\DocCommentNode;
-use Calcinai\Incephption\Node\Traits\DocTrait;
-use Calcinai\Incephption\Node\Traits\AbstractTrait;
-use Calcinai\Incephption\Node\Traits\FinalTrait;
-use Calcinai\Incephption\Node\Traits\StaticTrait;
-use Calcinai\Incephption\Node\Traits\VisibilityTrait;
+use Calcinai\Incephption\Helper\DocComment;
+use PhpParser\Builder\Class_;
+use PhpParser\Builder\Declaration;
+use PhpParser\Builder\Property;
+use PhpParser\BuilderAbstract;
 
 abstract class AbstractContext {
 
     /**
      * @var AbstractContext
      */
-    private $parent_context;
+    protected $parent_context;
+
 
     protected $pending_qualifiers;
+
 
     public function __construct(AbstractContext $parent_context = null) {
         $this->parent_context = $parent_context;
@@ -88,37 +88,41 @@ abstract class AbstractContext {
     /**
      * Process the qualifier queue on a particular node
      *
-     * @param AbstractNode $node
+     * @param Declaration $node
      * @throws InvalidQualifierException
      */
-    protected function processQueuedQualifiers(AbstractNode $node){
+    protected function processQueuedQualifiers(Declaration $node){
 
         while($qualifier = array_pop($this->pending_qualifiers)){
             switch($qualifier){
                 case 'abstract':
-                    /** @var AbstractNode|AbstractTrait $node */
-                    $node->assertTrait(AbstractTrait::class);
-                    $node->setIsAbstract(true);
+                    /** @var Class_ $node */
+                    $node->makeAbstract();
                     break;
 
                 case 'static':
-                    /** @var AbstractNode|StaticTrait $node */
-                    $node->assertTrait(StaticTrait::class);
-                    $node->setIsStatic(true);
+                    /** @var Property $node */
+                    $node->makeStatic();
                     break;
 
                 case 'final':
-                    /** @var AbstractNode|FinalTrait $node */
-                    $node->assertTrait(FinalTrait::class);
-                    $node->setIsFinal(true);
+                    /** @var Class_|Property $node */
+                    $node->makeFinal();
                     break;
 
-                case AbstractNode::VISIBILITY_PRIVATE:
-                case AbstractNode::VISIBILITY_PROTECTED:
-                case AbstractNode::VISIBILITY_PUBLIC:
-                    /** @var AbstractNode|VisibilityTrait $node */
-                    $node->assertTrait(VisibilityTrait::class);
-                    $node->setVisibility($qualifier);
+                case 'private':
+                    /** @var Class_|Property $node */
+                    $node->makePrivate();
+                    break;
+
+                case 'protected':
+                    /** @var Class_|Property $node */
+                    $node->makeProtected();
+                    break;
+
+                case 'public':
+                    /** @var Class_|Property $node */
+                    $node->makePublic();
                     break;
 
                 default:
@@ -132,11 +136,9 @@ abstract class AbstractContext {
      * Use the backtrace to find doc comments.
      * Not pretty. (at all).
      *
-     * @param AbstractNode $node the node to collect for.
+     * @param Declaration $node the node to collect for.
      */
-    protected function collectDocs(AbstractNode $node){
-
-        /** @var DocTrait $node ...shouldn't have to do this. */
+    protected function collectDocs(Declaration $node){
 
         //Can't really use reflection cause it's completely unstructured
         $backtrace = debug_backtrace();
@@ -159,9 +161,9 @@ abstract class AbstractContext {
 
         if(strpos($line, '//') === 0){
             //Single line comment
-            $doc = new DocCommentNode();
+            $doc = new DocComment();
             $doc->setSummary(ltrim($line, '/'));
-            $node->addDoc($doc);
+            $node->setDocComment((string) $doc);
 
             return;
         } else {
@@ -179,7 +181,7 @@ abstract class AbstractContext {
                     }
                     $file->seek($line_number);
                 }
-                $node->addDoc(DocCommentNode::createFromDocComment($block));
+                $node->setDocComment((string) DocComment::createFromDocComment($block));
             }
         }
     }

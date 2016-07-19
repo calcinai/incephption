@@ -4,12 +4,11 @@
  * @author     Michael Calcinai <michael@calcin.ai>
  */
 
-namespace Calcinai\Incephption\Node;
+namespace Calcinai\Incephption\Helper;
 
+use Calcinai\Incephption\Helper\DocComment\Tag;
 
-use Calcinai\Incephption\Node\DocCommentNode\TagNode;
-
-class DocCommentNode extends AbstractNode {
+class DocComment {
 
     private $summary;
     private $lines = [];
@@ -39,7 +38,7 @@ class DocCommentNode extends AbstractNode {
         return $this->lines;
     }
 
-    public function addTag(TagNode $tag){
+    public function addTag(Tag $tag){
         $this->tags[] = $tag;
         return $this;
     }
@@ -47,10 +46,10 @@ class DocCommentNode extends AbstractNode {
     /**
      * merge two doc nodes
      *
-     * @param DocCommentNode $new
+     * @param DocComment $new
      * @return $this
      */
-    public function merge(DocCommentNode $new){
+    public function merge(DocComment $new){
         foreach($new->lines as $line){
             $this->addDescriptionLine($line);
         }
@@ -96,7 +95,7 @@ class DocCommentNode extends AbstractNode {
 
             } elseif(!empty($matches['tag'])) {
                 //The following logic makes some small assumptions, ultimately, it wasn't worth defining a handler per tag.
-                $tag = TagNode::create($matches['tag']);
+                $tag = new Tag($matches['tag']);
 
                 if(!empty($matches['var_name'])){
                     $tag->setVarName($matches['var_name']);
@@ -119,6 +118,33 @@ class DocCommentNode extends AbstractNode {
         }
 
         return $self;
+    }
+
+
+    public function __toString() {
+
+        $output = sprintf("/**\n");
+
+        if($this->summary !== null){
+            $output .= sprintf(" * %s\n", $this->summary);
+            $output .= sprintf(" *\n");
+        }
+
+        foreach($this->lines as $line){
+            $output .= sprintf(" * %s\n", $line);
+        }
+
+        if(!empty($this->tags)){
+            $output .= sprintf(" *\n");
+        }
+
+        foreach($this->tags as $tag) {
+            $output .= sprintf(" * %s\n", (string) $tag);
+        }
+
+        $output .= sprintf(" */");
+
+        return $output;
     }
 
 }

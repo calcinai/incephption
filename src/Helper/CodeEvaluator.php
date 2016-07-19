@@ -6,7 +6,6 @@
  */
 namespace Calcinai\Incephption\Helper;
 
-use PhpParser\Node\Stmt\If_;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 

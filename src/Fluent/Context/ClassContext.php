@@ -9,33 +9,31 @@ namespace Calcinai\Incephption\Fluent\Context;
 
 use Calcinai\Incephption\Exception\InvalidQualifierException;
 use Calcinai\Incephption\Helper\CodeEvaluator;
-use Calcinai\Incephption\Node\AbstractNode;
-use Calcinai\Incephption\Node\ClassNode;
-use Calcinai\Incephption\Node\DocCommentNode;
+use PhpParser\Builder\Class_;
+use PhpParser\Node\Stmt\TraitUse;
 
 class ClassContext extends AbstractContext {
 
     /**
-     * @var ClassNode
+     * @var Class_
      */
     private $class;
 
-    public function __construct(AbstractContext $parent_context, ClassNode $class) {
+    public function __construct(AbstractContext $parent_context, Class_ $class) {
         parent::__construct($parent_context);
 
         $this->class = $class;
     }
 
     public function handleExtends($class_name){
-        $this->class->setExtends($class_name);
+        $this->class->extend($class_name);
         return $this;
     }
 
-    public function handleUse($class_name){
-        $use = ClassNode\UseNode::create($class_name);
-        $this->class->addUse($use);
+    public function handleUse($trait_name){
 
-        $this->collectDocs($use);
+        $use = new TraitUse([$trait_name]);
+        $this->class->addStmt($use);
 
         return new ClassUseContext($this, $use);
     }

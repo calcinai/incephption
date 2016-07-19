@@ -5,7 +5,8 @@ PHP code generator with a fluent interface
 soon
 
 ## Usage
-You can use the basic OO implemention or the super-fluent interface (shown below).  The idea is for the template to read as much like PHP as possible, while still being valid php.
+You can use the basic OO implemention or the super-fluent interface (shown below).  The idea is for the template to read as much like PHP as 
+possible, while still being valid php.
 
 ```php
 $template = (new Builder())
@@ -148,8 +149,10 @@ $builder
 
 ## Function Evaluation
 
-This library leverages [nikic/php-parser](https://github.com/nikic/PHP-Parser) to tokenize the closures for evaluation, but unfortunately, it
-can't use the code creation as it isn't exhaustive in its implementation of some nodes.
+I have now replaced the underlying structure with the AST layer from [nikic/php-parser](https://github.com/nikic/PHP-Parser). This is a bit slower
+than the previous implementation, but it gives more flexibility.  The functions which can evaluated in static context will be, enabling you 
+to template the method body in PHP.
+
 
 ## Code completion
 

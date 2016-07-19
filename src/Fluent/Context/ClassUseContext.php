@@ -6,8 +6,10 @@
 
 namespace Calcinai\Incephption\Fluent\Context;
 
-use Calcinai\Incephption\Node\AbstractNode;
-use Calcinai\Incephption\Node\ClassNode\UseNode;
+use PhpParser\Node\Name\FullyQualified;
+use PhpParser\Node\Name\Relative;
+use PhpParser\Node\Stmt\TraitUse;
+use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
 
 class ClassUseContext extends AbstractContext{
 
@@ -15,7 +17,7 @@ class ClassUseContext extends AbstractContext{
 
     private $pending_override;
 
-    public function __construct(AbstractContext $parent_context, UseNode $use) {
+    public function __construct(AbstractContext $parent_context, TraitUse $use) {
         parent::__construct($parent_context);
 
         $this->use = $use;
@@ -24,9 +26,10 @@ class ClassUseContext extends AbstractContext{
 
     public function handleInsteadof($insteadof){
         //var_dump($expression);
-        $insteadof = new UseNode\InsteadOfNode($this->pending_override, $insteadof);
-        $this->use->addInsteadOf($insteadof);
 
+        list($trait, $method) = explode('::', $this->pending_override, 2);
+
+        $this->use->adaptations[] = new Precedence(new Relative($trait), $method, explode(',', $insteadof));;
         $this->pending_override = null;
 
         return $this;
@@ -52,6 +55,8 @@ class ClassUseContext extends AbstractContext{
     }
 
     public function handleAs($name){
+        return $this;
+
         $override = UseNode\AsNode::create($this->pending_override)
             ->setAs($name);
 
@@ -61,7 +66,7 @@ class ClassUseContext extends AbstractContext{
     }
 
     public function handlePrivate($name = null){
-        return $this->handleVar($name, AbstractNode::VISIBILITY_PRIVATE);
+        return $this;//->handleVar($name, AbstractNode::VISIBILITY_PRIVATE);
     }
 
     public function handleProtected($name = null){
