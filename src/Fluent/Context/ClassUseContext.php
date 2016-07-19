@@ -6,67 +6,42 @@
 
 namespace Calcinai\Incephption\Fluent\Context;
 
-use PhpParser\Node\Name\FullyQualified;
-use PhpParser\Node\Name\Relative;
-use PhpParser\Node\Stmt\TraitUse;
-use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
+use Calcinai\Incephption\Node\AbstractNode;
+use Calcinai\Incephption\Node\ClassNode\UseNode;
+use Calcinai\Incephption\Node\ClassNode\UseNode\InsteadOfNode;
 
-class ClassUseContext extends AbstractContext{
-
-    private $use;
+class ClassUseContext extends AbstractContext {
 
     private $pending_override;
 
-    public function __construct(AbstractContext $parent_context, TraitUse $use) {
+    public function __construct(UseNode $use, AbstractContext $parent_context = null) {
         parent::__construct($parent_context);
 
-        $this->use = $use;
+        $this->node = $use;
     }
 
 
     public function handleInsteadof($insteadof){
-        //var_dump($expression);
 
-        list($trait, $method) = explode('::', $this->pending_override, 2);
+        $insteadof = new InsteadOfNode($this->pending_override, $insteadof);
+        $this->node->addInsteadOf($insteadof);
 
-        $this->use->adaptations[] = new Precedence(new Relative($trait), $method, explode(',', $insteadof));;
         $this->pending_override = null;
 
         return $this;
     }
 
-
-    /**
-     * Hijack a subsequent use in case it's renaming a function or resolving conflicts.
-     *
-     * @param $name
-     * @return $this
-     */
-    public function handleUse($name){
-        if(false === strpos($name, '::')){
-            /** @var ClassContext $parent_context */
-            $parent_context = $this->getParentContext();
-            $parent_context->handleUse($name);
-        }
-
+    public function handleMethod($name){
         $this->pending_override = $name;
-
         return $this;
     }
 
     public function handleAs($name){
-        return $this;
-
-        $override = UseNode\AsNode::create($this->pending_override)
-            ->setAs($name);
-
-        $this->use->addOverride($override);
-
-        return $this;
+        return $this->handleVar($name);
     }
 
     public function handlePrivate($name = null){
-        return $this;//->handleVar($name, AbstractNode::VISIBILITY_PRIVATE);
+        return $this->handleVar($name, AbstractNode::VISIBILITY_PRIVATE);
     }
 
     public function handleProtected($name = null){
@@ -78,31 +53,13 @@ class ClassUseContext extends AbstractContext{
     }
 
     public function handleVar($name = null, $visibility = null){
+
         $override = UseNode\AsNode::create($this->pending_override)
             ->setVisibility($visibility)
             ->setAs($name);
 
-        $this->use->addOverride($override);
+        $this->node->addOverride($override);
 
         return $this;
-    }
-
-
-
-    public function applyQualifier($name){
-        switch($name){
-            case 'private':
-                return $this->handlePrivate();
-            case 'protected':
-                return $this->handleProtected();
-            case 'public':
-                return $this->handlePublic();
-
-            case 'as': //as really does nothing - it's just a joining word
-                return $this;
-            default:
-                return false;
-        }
-
     }
 }

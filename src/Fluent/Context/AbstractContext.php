@@ -6,12 +6,14 @@
 
 namespace Calcinai\Incephption\Fluent\Context;
 
+use Calcinai\Incephption\Node\AbstractNode;
+use Calcinai\Incephption\Node\DocCommentNode;
+use Calcinai\Incephption\Node\Traits\AbstractTrait;
+use Calcinai\Incephption\Node\Traits\DocTrait;
+use Calcinai\Incephption\Node\Traits\FinalTrait;
+use Calcinai\Incephption\Node\Traits\StaticTrait;
+use Calcinai\Incephption\Node\Traits\VisibilityTrait;
 use Calcinai\Incephption\Exception\InvalidQualifierException;
-use Calcinai\Incephption\Helper\DocComment;
-use PhpParser\Builder\Class_;
-use PhpParser\Builder\Declaration;
-use PhpParser\Builder\Property;
-use PhpParser\BuilderAbstract;
 
 abstract class AbstractContext {
 
@@ -20,12 +22,18 @@ abstract class AbstractContext {
      */
     protected $parent_context;
 
+    /**
+     * @var AbstractNode
+     */
+    protected $node;
+
 
     protected $pending_qualifiers;
 
 
     public function __construct(AbstractContext $parent_context = null) {
         $this->parent_context = $parent_context;
+        $this->pending_qualifiers = [];
     }
 
     /**
@@ -33,16 +41,6 @@ abstract class AbstractContext {
      */
     public function getParentContext() {
         return $this->parent_context;
-    }
-
-    /**
-     * This is to allow a context to apply a qualifier. (private, static etc).
-     *
-     * @param $name
-     * @return bool
-     */
-    public function applyQualifier($name){
-        return false;
     }
 
     public function __call($name, $arguments) {
@@ -74,13 +72,61 @@ abstract class AbstractContext {
      */
     public function __get($name) {
 
-        //Will return false if it couldn't handle it, or a new context if it did.
-        $context = $this->applyQualifier($name);
-        if($context !== false){
-            return $context;
+        //Try to apply the qualifier to the current node
+        try {
+            return $this->applyQualifier($this->node, $name);
+        } catch (InvalidQualifierException $e){
+            $this->pending_qualifiers[] = $name;
         }
 
-        $this->pending_qualifiers[] = $name;
+        return $this;
+    }
+
+
+    /**
+     * This is to allow a context to apply a qualifier. (private, static etc).
+     *
+     * @param AbstractNode $node
+     * @param $qualifier
+     * @return $this
+     * @throws InvalidQualifierException
+     */
+    public function applyQualifier(AbstractNode $node, $qualifier){
+
+        switch($qualifier){
+            case 'abstract':
+                /** @var AbstractNode|AbstractTrait $node */
+                $node->assertTrait(AbstractTrait::class);
+                $node->setIsAbstract(true);
+                break;
+
+            case 'static':
+                /** @var AbstractNode|StaticTrait $node */
+                $node->assertTrait(StaticTrait::class);
+                $node->setIsStatic(true);
+                break;
+
+            case 'final':
+                /** @var AbstractNode|FinalTrait $node */
+                $node->assertTrait(FinalTrait::class);
+                $node->setIsFinal(true);
+                break;
+
+            case 'as':
+                break;
+
+            case AbstractNode::VISIBILITY_PRIVATE:
+            case AbstractNode::VISIBILITY_PROTECTED:
+            case AbstractNode::VISIBILITY_PUBLIC:
+                /** @var AbstractNode|VisibilityTrait $node */
+                $node->assertTrait(VisibilityTrait::class);
+                $node->setVisibility($qualifier);
+                break;
+
+            default:
+                throw new InvalidQualifierException(sprintf('%s do not accept the %s qualifier.', get_class($node), $qualifier));
+        }
+
         return $this;
     }
 
@@ -88,47 +134,16 @@ abstract class AbstractContext {
     /**
      * Process the qualifier queue on a particular node
      *
-     * @param Declaration $node
+     * @param AbstractNode $node
+     * @return $this
      * @throws InvalidQualifierException
      */
-    protected function processQueuedQualifiers(Declaration $node){
-
+    protected function processQueuedQualifiers(AbstractNode $node){
         while($qualifier = array_pop($this->pending_qualifiers)){
-            switch($qualifier){
-                case 'abstract':
-                    /** @var Class_ $node */
-                    $node->makeAbstract();
-                    break;
-
-                case 'static':
-                    /** @var Property $node */
-                    $node->makeStatic();
-                    break;
-
-                case 'final':
-                    /** @var Class_|Property $node */
-                    $node->makeFinal();
-                    break;
-
-                case 'private':
-                    /** @var Class_|Property $node */
-                    $node->makePrivate();
-                    break;
-
-                case 'protected':
-                    /** @var Class_|Property $node */
-                    $node->makeProtected();
-                    break;
-
-                case 'public':
-                    /** @var Class_|Property $node */
-                    $node->makePublic();
-                    break;
-
-                default:
-                    throw new InvalidQualifierException(sprintf('Class nodes do not accept the %s qualifier.', $qualifier));
-            }
+            $this->applyQualifier($node, $qualifier);
         }
+
+        return $this;
     }
 
 
@@ -136,9 +151,11 @@ abstract class AbstractContext {
      * Use the backtrace to find doc comments.
      * Not pretty. (at all).
      *
-     * @param Declaration $node the node to collect for.
+     * @param AbstractNode $node the node to collect for.
      */
-    protected function collectDocs(Declaration $node){
+    protected function collectDocs(AbstractNode $node){
+
+        /** @var DocTrait $node -  ugh. */
 
         //Can't really use reflection cause it's completely unstructured
         $backtrace = debug_backtrace();
@@ -161,9 +178,9 @@ abstract class AbstractContext {
 
         if(strpos($line, '//') === 0){
             //Single line comment
-            $doc = new DocComment();
+            $doc = new DocCommentNode();
             $doc->setSummary(ltrim($line, '/'));
-            $node->setDocComment((string) $doc);
+            $node->addDoc($doc);
 
             return;
         } else {
@@ -181,7 +198,7 @@ abstract class AbstractContext {
                     }
                     $file->seek($line_number);
                 }
-                $node->setDocComment((string) DocComment::createFromDocComment($block));
+                $node->addDoc(DocCommentNode::createFromDocComment($block));
             }
         }
     }

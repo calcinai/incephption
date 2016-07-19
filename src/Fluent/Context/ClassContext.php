@@ -9,40 +9,36 @@ namespace Calcinai\Incephption\Fluent\Context;
 
 use Calcinai\Incephption\Exception\InvalidQualifierException;
 use Calcinai\Incephption\Helper\CodeEvaluator;
-use PhpParser\Builder\Class_;
-use PhpParser\Node\Stmt\TraitUse;
+use Calcinai\Incephption\Node\AbstractNode;
+use Calcinai\Incephption\Node\ClassNode;
+use Calcinai\Incephption\Node\DocCommentNode;
 
 class ClassContext extends AbstractContext {
 
-    /**
-     * @var Class_
-     */
-    private $class;
-
-    public function __construct(AbstractContext $parent_context, Class_ $class) {
+    public function __construct(ClassNode $class, AbstractContext $parent_context = null) {
         parent::__construct($parent_context);
 
-        $this->class = $class;
+        $this->node = $class;
     }
 
     public function handleExtends($class_name){
-        $this->class->extend($class_name);
+        $this->node->setExtends($class_name);
         return $this;
     }
 
-    public function handleUse($trait_name){
+    public function handleUse($class_name){
+        $use = ClassNode\UseNode::create($class_name);
+        $this->node->addUse($use);
 
-        $use = new TraitUse([$trait_name]);
-        $this->class->addStmt($use);
-
-        return new ClassUseContext($this, $use);
+        $this->collectDocs($use);
+        return new ClassUseContext($use, $this);
     }
 
     public function handleConst($name, $value){
         $const = ClassNode\ConstNode::create($name)
             ->setValue($value);
 
-        $this->class->addConst($const);
+        $this->node->addConst($const);
 
         $this->collectDocs($const);
 
@@ -68,7 +64,7 @@ class ClassContext extends AbstractContext {
 
         $this->collectDocs($property);
 
-        $this->class->addProperty($property);
+        $this->node->addProperty($property);
         return $this;
     }
 
@@ -79,7 +75,7 @@ class ClassContext extends AbstractContext {
         $this->collectDocs($property);
         $this->processQueuedQualifiers($property);
 
-        $this->class->addProperty($property);
+        $this->node->addProperty($property);
         return $this;
     }
 
@@ -94,18 +90,17 @@ class ClassContext extends AbstractContext {
     public function handleFunction($name, callable $function){
 
         $method = ClassNode\MethodNode::create($name);
-        $this->class->addMethod($method);
+        $this->node->addMethod($method);
 
         //Need to use reflection for a few things here since the closure behaves a bit differently.
         $reflection = new \ReflectionFunction($function);
         $method->addDoc(DocCommentNode::createFromDocComment($reflection->getDocComment()));
         $variables = ['this' => $reflection->getClosureThis()] + $reflection->getStaticVariables();
-
-        $evaluator = CodeEvaluator::fromReflection($reflection);
-        $evaluator->simplify($variables);
-        exit;
-
-        $this->processQueuedQualifiers($method);
+//
+//        $evaluator = CodeEvaluator::fromReflection($reflection);
+//        exit;
+//
+//        $this->processQueuedQualifiers($method);
 
         //Terminal
         return $this;

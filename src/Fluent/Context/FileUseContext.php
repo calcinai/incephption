@@ -6,20 +6,18 @@
 
 namespace Calcinai\Incephption\Fluent\Context;
 
-use PhpParser\Builder\Use_;
+use Calcinai\Incephption\Node\FileNode\UseNode;
 
-class NamespaceUseContext extends AbstractContext{
+class FileUseContext extends AbstractContext{
 
-    private $use;
-
-    public function __construct(AbstractContext $parent_context, Use_ $use) {
+    public function __construct(UseNode $use, AbstractContext $parent_context = null) {
         parent::__construct($parent_context);
 
-        $this->use = $use;
+        $this->node = $use;
     }
 
     public function handleAs($alias){
-        $this->use->as($alias);
+        $this->node->setAs($alias);
         //this is a terminal handler.
         return $this->getParentContext();
     }
