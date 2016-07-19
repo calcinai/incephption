@@ -8,8 +8,10 @@ namespace Calcinai\Incephption\Fluent\Context;
 
 
 use Calcinai\Incephption\Exception\InvalidQualifierException;
+use Calcinai\Incephption\Helper\CodeEvaluator;
 use Calcinai\Incephption\Node\AbstractNode;
 use Calcinai\Incephption\Node\ClassNode;
+use Calcinai\Incephption\Node\DocCommentNode;
 
 class ClassContext extends AbstractContext {
 
@@ -72,37 +74,40 @@ class ClassContext extends AbstractContext {
         return $this;
     }
 
-    public function handleFunction($name, $function){
+    public function handleStatic($name, $default = null){
+        $property = ClassNode\PropertyNode::create($name)
+            ->setDefaultValue($default);
+
+        $this->collectDocs($property);
+        $this->processQueuedQualifiers($property);
+
+        $this->class->addProperty($property);
+        return $this;
+    }
+
+    /**
+     * This one is quite large since it's got to figure out a lot.
+     *
+     * @param $name
+     * @param callable $function
+     * @return $this
+     * @throws InvalidQualifierException
+     */
+    public function handleFunction($name, callable $function){
 
         $method = ClassNode\MethodNode::create($name);
         $this->class->addMethod($method);
 
-        $this->collectDocs($method);
+        //Need to use reflection for a few things here since the closure behaves a bit differently.
+        $reflection = new \ReflectionFunction($function);
+        $method->addDoc(DocCommentNode::createFromDocComment($reflection->getDocComment()));
+        $variables = ['this' => $reflection->getClosureThis()] + $reflection->getStaticVariables();
 
-        while($qualifier = array_pop($this->pending_qualifiers)){
-            switch($qualifier){
-                case 'abstract':
-                    $method->setIsAbstract(true);
-                    break;
+        $evaluator = CodeEvaluator::fromReflection($reflection);
+        $evaluator->simplify($variables);
+        exit;
 
-                case 'static':
-                    $method->setIsStatic(true);
-                    break;
-
-                case 'final':
-                    $method->setIsFinal(true);
-                    break;
-
-                case AbstractNode::VISIBILITY_PRIVATE:
-                case AbstractNode::VISIBILITY_PROTECTED:
-                case AbstractNode::VISIBILITY_PUBLIC:
-                    $method->setVisibility($qualifier);
-                    break;
-
-                default:
-                    throw new InvalidQualifierException(sprintf('Class nodes do not accept the %s qualifier.', $qualifier));
-            }
-        }
+        $this->processQueuedQualifiers($method);
 
         //Terminal
         return $this;
@@ -110,4 +115,3 @@ class ClassContext extends AbstractContext {
 
 
 }
-

@@ -32,10 +32,12 @@ class FileNode extends AbstractNode {
 
     public function addUse($use) {
         $this->uses[] = $use;
+        return $this;
     }
 
     public function setNamespace($namespace) {
         $this->namespace = $namespace;
+        return $this;
     }
 
 

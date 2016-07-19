@@ -6,9 +6,14 @@
 
 namespace Calcinai\Incephption\Fluent\Context;
 
+use Calcinai\Incephption\Exception\InvalidQualifierException;
 use Calcinai\Incephption\Node\AbstractNode;
-use Calcinai\Incephption\Node\DocNode;
+use Calcinai\Incephption\Node\DocCommentNode;
 use Calcinai\Incephption\Node\Traits\DocTrait;
+use Calcinai\Incephption\Node\Traits\AbstractTrait;
+use Calcinai\Incephption\Node\Traits\FinalTrait;
+use Calcinai\Incephption\Node\Traits\StaticTrait;
+use Calcinai\Incephption\Node\Traits\VisibilityTrait;
 
 abstract class AbstractContext {
 
@@ -81,6 +86,49 @@ abstract class AbstractContext {
 
 
     /**
+     * Process the qualifier queue on a particular node
+     *
+     * @param AbstractNode $node
+     * @throws InvalidQualifierException
+     */
+    protected function processQueuedQualifiers(AbstractNode $node){
+
+        while($qualifier = array_pop($this->pending_qualifiers)){
+            switch($qualifier){
+                case 'abstract':
+                    /** @var AbstractNode|AbstractTrait $node */
+                    $node->assertTrait(AbstractTrait::class);
+                    $node->setIsAbstract(true);
+                    break;
+
+                case 'static':
+                    /** @var AbstractNode|StaticTrait $node */
+                    $node->assertTrait(StaticTrait::class);
+                    $node->setIsStatic(true);
+                    break;
+
+                case 'final':
+                    /** @var AbstractNode|FinalTrait $node */
+                    $node->assertTrait(FinalTrait::class);
+                    $node->setIsFinal(true);
+                    break;
+
+                case AbstractNode::VISIBILITY_PRIVATE:
+                case AbstractNode::VISIBILITY_PROTECTED:
+                case AbstractNode::VISIBILITY_PUBLIC:
+                    /** @var AbstractNode|VisibilityTrait $node */
+                    $node->assertTrait(VisibilityTrait::class);
+                    $node->setVisibility($qualifier);
+                    break;
+
+                default:
+                    throw new InvalidQualifierException(sprintf('Class nodes do not accept the %s qualifier.', $qualifier));
+            }
+        }
+    }
+
+
+    /**
      * Use the backtrace to find doc comments.
      * Not pretty. (at all).
      *
@@ -111,32 +159,27 @@ abstract class AbstractContext {
 
         if(strpos($line, '//') === 0){
             //Single line comment
-            $doc = new DocNode();
-            $doc->addLine(ltrim($line, '/'));
+            $doc = new DocCommentNode();
+            $doc->setSummary(ltrim($line, '/'));
             $node->addDoc($doc);
 
             return;
         } else {
-            var_dump($file->current());
-            //Look for doc comments
+            //Look for doc comments, (this is parsing backwards)
             if(strpos($line, '*/') !== false) {
-                $parsed_lines = [];
-                while($line_number-- > 0){
-                    $file->seek($line_number);
-                    $line = $file->current();
+                $block = '';
 
-                    if(strpos($line, '/*') !== false) {
+                while($line_number-- > 0){
+                    $line = $file->current();
+                    $block = $line.$block;
+
+                    if(strpos($line, '/**') !== false) {
                         //Break out at start of docblock
                         break;
                     }
-                    $parsed_lines[] = trim($line, "\n\t* ");
+                    $file->seek($line_number);
                 }
-                //Got to put them in backwards
-                $doc_node = new DocNode();
-                foreach(array_reverse($parsed_lines) as $line){
-                    $doc_node->addLine($line);
-                }
-                $node->addDoc($doc_node);
+                $node->addDoc(DocCommentNode::createFromDocComment($block));
             }
         }
     }

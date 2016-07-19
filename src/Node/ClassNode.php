@@ -36,21 +36,26 @@ class ClassNode extends AbstractNode {
 
     public function setExtends($class_name) {
         $this->extends = $class_name;
+        return $this;
     }
 
     public function addUse(UseNode $use) {
         $this->uses[] = $use;
+        return $this;
     }
 
     public function addConst(ConstNode $const) {
         $this->consts[] = $const;
+        return $this;
     }
 
     public function addProperty(PropertyNode $property) {
         $this->properties[] = $property;
+        return $this;
     }
 
     public function addMethod(MethodNode $method) {
         $this->methods[] = $method;
+        return $this;
     }
 }

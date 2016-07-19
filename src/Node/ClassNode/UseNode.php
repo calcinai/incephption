@@ -24,10 +24,12 @@ class UseNode extends AbstractNode {
 
     public function addInsteadOf(InsteadOfNode $insteadof) {
         $this->insteadofs[] = $insteadof;
+        return $this;
     }
 
     public function addOverride(AsNode $override) {
         $this->overrides[] = $override;
+        return $this;
     }
 
 }

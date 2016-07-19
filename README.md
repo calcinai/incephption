@@ -145,4 +145,13 @@ $builder
 ...
 ```
 
-More to come!
+
+## Function Evaluation
+
+This library leverages [nikic/php-parser](https://github.com/nikic/PHP-Parser) to tokenize the closures for evaluation, but unfortunately, it
+can't use the code creation as it isn't exhaustive in its implementation of some nodes.
+
+## Code completion
+
+To benefit most from the super-fluent generator, you need a smart IDE. As you change context in your generation chain, the type hinting will show 
+what's available in that specific context.

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package    incephption
  * @author     Michael Calcinai <michael@calcin.ai>
@@ -37,18 +38,34 @@ $file = FileNode::create();
     ->const('CONSTANT_ONE', 1)
     ->const('CONSTANT_TWO', 2)
 
-    ->private('private_property', 'default_value')
+    ->private->static('private_property', 'default_value')
 
     ->public('public_property')
 
     /**
-     * Comment for this function
+     * Summary for this function
+     *
      * Params will be automatically appended below, although you can override a specific param if you need to.
-     * the 'use' in the closure will disappear from generated code, with any of its variables evaluated
+     * If you're using PHP7, you can type hint scalars too.
+     * The 'use' in the closure will disappear from generated code, with any of its variables evaluated
+     *
+     * @param string $who Override automatic doc for this variable
      */
-    ->final->protected->function('helloWorld', function(DateTime $date) use($condition){
-        if($condition){
-            echo $date->format('u');
+    ->final->protected->function('helloWorld', function(DateTime $date, $who) use($condition){
+        if($condition == true){
+            if($condition == $condition){
+                echo $date->format('u');
+            }
+        } else {
+            echo $who;
+        }
+
+        switch($condition){
+            case true:
+                echo $date->format('u');
+                break;
+            case false:
+                echo $who;
         }
     })
 

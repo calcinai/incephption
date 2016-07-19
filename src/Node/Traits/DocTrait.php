@@ -7,16 +7,16 @@
 namespace Calcinai\Incephption\Node\Traits;
 
 
-use Calcinai\Incephption\Node\DocNode;
+use Calcinai\Incephption\Node\DocCommentNode;
 
 trait DocTrait {
 
     /**
-     * @var DocNode
+     * @var DocCommentNode
      */
     private $doc;
 
-    public function addDoc(DocNode $doc){
+    public function addDoc(DocCommentNode $doc){
 
         //If there is already one, use it.
         if($this->doc !== null){

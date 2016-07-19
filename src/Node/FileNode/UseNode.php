@@ -21,5 +21,6 @@ class UseNode extends AbstractNode {
 
     public function setAs($alias) {
         $this->as = $alias;
+        return $this;
     }
 }
