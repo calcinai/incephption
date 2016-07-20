@@ -1,5 +1,5 @@
 # incephption
-PHP code generator with a fluent interface
+~PHP code generator with a fluent interface~ There's a better use for this.  Needs work!
 
 ## Installation
 soon

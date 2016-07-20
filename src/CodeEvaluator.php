@@ -4,6 +4,6 @@
  * @package    incephption
  * @author     Michael Calcinai <michael@calcin.ai>
  */
-namespace Calcinai\Incephption\Exception;
+class CodeEvaluator {
 
-class InvalidQualifierException extends \Exception {}
+}
